@@ -1,9 +1,11 @@
 import os
+import threading
 from collections import namedtuple
 import time
+from Sources.Keypad import Keys, ActionMenu
 
 # agregar tiempo de espera para la carga del sistema
-print("Esperando carga del sistema")
+#print("Esperando carga del sistema")
 time.sleep(10)
 
 # obtener listado de tarjetas de audio
@@ -17,11 +19,11 @@ b1 = int(rec[1][0])
 b2 = int(rec[2][0])
 b3 = int(rec[3][0])
 b4 = int(rec[4][0])
-print("Numeros de tarjetas")
-print(b1)
-print(b2)
-print(b3)
-print(b4)
+#print("Numeros de tarjetas")
+#print(b1)
+#print(b2)
+#print(b3)
+#print(b4)
 
 # obtener listado de dispositivos usb
 usb_r = os.popen('lsusb').read()
@@ -34,11 +36,11 @@ a1 = int(usb_r[4][2])
 a2 = int(usb_r[3][2])
 a3 = int(usb_r[2][2])
 a4 = int(usb_r[1][2])
-print("Numeros de dispositivo")
-print(a1)
-print(a2)
-print(a3)
-print(a4)
+#print("Numeros de dispositivo")
+#print(a1)
+#print(a2)
+#print(a3)
+#print(a4)
 
 # Partiendo de que tenemos dos grupos de datos:
 # 1. Núm de Device + el orden de puerto   (index, usb)
@@ -72,7 +74,7 @@ os.popen('touch .asoundrc')
 
 # abrir el archivo
 file = open('.asoundrc', 'w')
-print("Creando archivo .asoundrc")
+#print("Creando archivo .asoundrc")
 
 # Escribir archivo
 file.write("pcm.multitrack {\n")
@@ -95,4 +97,9 @@ file.write(" bindings.3.slave d;\n")
 file.write(" bindings.3.channel 0;\n}")
 
 file.close()
-print("archivo .asoundrc creado")
+#print("archivo .asoundrc creado")
+key_read = Keys()
+key_read.start()
+
+menu = ActionMenu()
+menu.start()
