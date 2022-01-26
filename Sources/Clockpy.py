@@ -12,17 +12,17 @@ fontdata = [
 
 mylcd = RPi_I2C_driver.lcd()
 mylcd.lcd_clear()
-dti = mktime(datetime.now().timetuple())
+dti = mktime(datetime.now().timetuple())-datetime.now().timetuple().tm_sec # para sincronizar los segundos
 mylcd.lcd_display_string_pos(datetime.now().strftime('%d/%m/%y %H:%M'),1,1)
-mylcd.lcd_load_custom_chars(fontdata)
-mylcd.lcd_display_string_pos(chr(0),2,1)
-mylcd.lcd_display_string_pos(chr(1),2,2)
+#mylcd.lcd_load_custom_chars(fontdata)
+#mylcd.lcd_display_string_pos(chr(0),2,1)
+#mylcd.lcd_display_string_pos(chr(1),2,2)
 while 1:
  ndti = mktime(datetime.now().timetuple())
- if dti+59 < ndti: # cambia cada minuto pero no está sincronizado con los segundos
+ if dti+59 < ndti: # cambia cada minuto
   dti = ndti
   mylcd.lcd_clear()
-  mylcd.lcd_display_string_pos(datetime.now().strftime('%b %d  %H:%M'),1,1)
+  mylcd.lcd_display_string_pos(datetime.now().strftime('%d/%m/%y %H:%M'),1,1)
   sleep(0.95)
  else:
   sleep(0.01)

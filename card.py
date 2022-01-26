@@ -1,12 +1,12 @@
 import os
 import threading
 from collections import namedtuple
-import time
-from Sources.Keypad import Keys, ActionMenu
+#import time
+from Sources.UI import Keys, ActionMenu#, Clock
 
 # agregar tiempo de espera para la carga del sistema
 #print("Esperando carga del sistema")
-time.sleep(10)
+#time.sleep(10)
 
 # obtener listado de tarjetas de audio
 rec = os.popen('arecord -l | grep card').read()
@@ -98,8 +98,12 @@ file.write(" bindings.3.channel 0;\n}")
 
 file.close()
 #print("archivo .asoundrc creado")
-key_read = Keys()
-key_read.start()
+
+#ck = Clock()
+#ck.start()
 
 menu = ActionMenu()
 menu.start()
+
+#key_read = Keys()
+#key_read.start()
