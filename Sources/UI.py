@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
 # SPDX-License-Identifier: MIT
 
-from time import sleep, mktime, strftime
+from time import sleep, mktime, strftime, perf_counter
 import digitalio
 import board
 import adafruit_matrixkeypad
@@ -35,8 +35,8 @@ mylcd = RPi_I2C_driver.lcd()
 mylcd.lcd_clear()
 # Menus Para LCD
 screen1a = "   BIENVENID@"
-screen2a = "PRESIONE 'C' PARA CONFIRMAR FECHA(DD/MM/AA) y HORA o PRESIONE 'A' PARA CONFIGURAR"
-screen3b = "A:CONF C:OK"
+screen2a = "PRESIONE 'C' PARA CONFIRMAR FECHA(DD/MM/AA) y HORA(24H) o PRESIONE 'A' PARA CONFIGURAR"
+screen3b = "A:CONFIG    C:OK"
 screen4b = "A:"
 screen4c =    "          B:"
 screen5a = "CONFIG PROGRAMAS"
@@ -99,11 +99,13 @@ class ActionMenu:
         self.thread = threading.Thread(target=self._thread)
         self.menu = 3
         self.action = False
+        self.current_menu=0
+        self.sleep_secs = 45
 
     def _thread(self):
         print("ActionMenu init")
-        #self.start_screen()
-        #self.info_screen()
+        self.start_screen()
+        self.info_screen()
         while True:
             self.menu_navig()
 
@@ -116,7 +118,7 @@ class ActionMenu:
             sleep(0.5)
             mylcd.lcd_clear()
             sleep(0.5)
-            
+                        
     def info_screen(self):
         str_pad = " " * 16
         my_long_string = str_pad + screen2a
@@ -127,13 +129,30 @@ class ActionMenu:
             mylcd.lcd_display_string(str_pad,1)
             
     def menu_navig(self):
-        if self.menu==3:
+        if self.menu==0:
+            mylcd.lcd_clear()
+            self.action = False
+            mylcd.backlight(0)
+            while self.action==False:
+                try:
+                    key_pressed = keypad.pressed_keys
+                    if key_pressed:
+                        sleep(0.4)
+                        self.menu = self.current_menu
+                        self.action = True
+                except Exception as e:
+                    print("Error",e )
+                sleep(1)
+    
+        elif self.menu==3:
             mylcd.lcd_clear()
             self.action = False
             # LCD config
             time_string = datetime.now().strftime('%d/%m/%y %H:%M')
             mylcd.lcd_display_string_pos(time_string,1,1)
             mylcd.lcd_display_string(screen3b,2)
+            # Timer to put a black screen
+            start=int(perf_counter())
             while self.action==False:
                 try:
                     key_pressed = keypad.pressed_keys
@@ -149,6 +168,11 @@ class ActionMenu:
                 except Exception as e:
                     print("Error",e )
                     
+                if int(perf_counter())-start > self.sleep_secs:
+                    self.current_menu = self.menu
+                    self.menu=0
+                    self.action=True
+                    
         elif self.menu==4:
             mylcd.lcd_clear()
             self.action = False
@@ -160,6 +184,8 @@ class ActionMenu:
             mylcd.lcd_display_string_pos(chr(0),2,2)
             mylcd.lcd_display_string_pos(screen4c,2,3)
             mylcd.lcd_display_string_pos(chr(1),2,15)
+            # Timer to put a black screen
+            start=int(perf_counter())
             while self.action == False:
                 try:
                     key_pressed = keypad.pressed_keys
@@ -174,6 +200,11 @@ class ActionMenu:
                             self.action = True
                 except Exception as e:
                     print("Error",e )
+                
+                if int(perf_counter())-start > self.sleep_secs:
+                    self.current_menu = self.menu
+                    self.menu=0
+                    self.action=True
                     
         elif self.menu==5:
             mylcd.lcd_clear()
@@ -185,6 +216,8 @@ class ActionMenu:
             mylcd.lcd_display_string_pos(chr(0),2,2)
             mylcd.lcd_display_string_pos(screen5c,2,3)
             mylcd.lcd_display_string_pos(chr(1),2,15)
+            # Timer to put a black screen
+            start=int(perf_counter())
             while self.action == False:
                 try:
                     key_pressed = keypad.pressed_keys
@@ -203,6 +236,11 @@ class ActionMenu:
                             self.action = True
                 except Exception as e:
                     print("Error",e )
+                
+                if int(perf_counter())-start > self.sleep_secs:
+                    self.current_menu = self.menu
+                    self.menu=0
+                    self.action=True
                     
         elif self.menu==6:
             mylcd.lcd_clear()
@@ -213,6 +251,8 @@ class ActionMenu:
             mylcd.lcd_load_custom_chars(fontdata)
             mylcd.lcd_display_string_pos(chr(0),2,2)
             mylcd.lcd_display_string_pos(screen6c,2,3)
+            # Timer to put a black screen
+            start=int(perf_counter())
             while self.action == False:
                 try:
                     key_pressed = keypad.pressed_keys
@@ -227,6 +267,11 @@ class ActionMenu:
                             self.action = True
                 except Exception as e:
                     print("Error",e )
+                    
+                if int(perf_counter())-start > self.sleep_secs:
+                    self.current_menu = self.menu
+                    self.menu=0
+                    self.action=True
         
         # Menú de configuración de Hora/Fecha
         if self.menu==7:
@@ -241,10 +286,13 @@ class ActionMenu:
             mylcd.lcd_display_string_pos(screen5c,2,3)
             mylcd.lcd_display_string_pos(chr(1),2,15)
             cursor = 1
+            # Timer to put a black screen
+            start=int(perf_counter())
             while self.action == False:
                 try:
                     key_pressed = keypad.pressed_keys
                     if key_pressed:
+                        start=int(perf_counter())
                         if key_pressed[0]=='A':
                             sleep(0.4)
                             if cursor > 1:
@@ -264,9 +312,9 @@ class ActionMenu:
                                 self.menu=4
                             self.action = True
                         elif key_pressed[0]=='B':
-                            if cursor!=2 and cursor!=5 and cursor!=11 and cursor!=8 or \
+                            if cursor!=2 and cursor!=5 and cursor!=11  or \
                                (cursor==2 and time_string[0]!='3') or (cursor==5 and time_string[3]!='1') or \
-                               (cursor==11 and time_string[9]!='2') or (cursor==8 and time_string[6]!='2'):
+                               (cursor==11 and time_string[9]!='2'):
                                 sleep(0.4)
                                 if cursor < 14:
                                     cursor=cursor+1
@@ -369,7 +417,12 @@ class ActionMenu:
                                         cursor=cursor+1
                 except Exception as e:
                     print("Error",e )
-                    
+                  
+                if int(perf_counter())-start > self.sleep_secs:
+                    self.current_menu = self.menu
+                    self.menu=0
+                    self.action=True
+                
                 mylcd.lcd_display_string_pos(time_string[cursor-1],1,cursor);
                 sleep(0.2)
                 mylcd.lcd_display_string_pos(' ',1,cursor);
